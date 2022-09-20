@@ -1,44 +1,39 @@
 package main
 
-import "fmt"
-import "github.com/cyruzin/golang-tmdb"
+import (
+	"fmt"
+	"os"
 
-tmdbClient, err := tmdb.Init(os.GetEnv("YOUR_APIKEY"))
-if err != nil {
-    fmt.Println(err)
-}
-
-// OPTIONAL: Setting a custom config for the http.Client.
-// The default timeout is 10 seconds. Here you can set other
-// options like Timeout and Transport.
-customClient := http.Client{
-    Timeout: time.Second * 5,
-    Transport: &http.Transport{
-        MaxIdleConns: 10,
-        IdleConnTimeout: 15 * time.Second,
-    }
-}
-
-tmdbClient.SetClientConfig(customClient)
-
-// OPTIONAL: Enable this option if you're going to use endpoints
-// that needs session id.
-//
-// You can read more about how this works:
-// https://developers.themoviedb.org/3/authentication/how-do-i-generate-a-session-id
-tmdbClient.SetSessionID(os.GetEnv("YOUR_SESSION_ID"))
-
-// OPTIONAL (Recommended): Enabling auto retry functionality.
-// This option will retry if the previous request fail (429 TOO MANY REQUESTS).
-tmdbClient.SetClientAutoRetry()
-
-movie, err := tmdbClient.GetMovieDetails(297802, nil)
-if err != nil {
- fmt.Println(err)
-}
-
-fmt.Println(movie.Title)
+	tmdb "github.com/cyruzin/golang-tmdb"
+)
 
 func main() {
-	fmt.Print("uhhh.. here?\n")
+	println(os.Getenv("TMDB"))
+	tmdbClient, err := tmdb.init("")
+	tmdbClient, err := tmdb.Init(os.Getenv("TMDB"))
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	options := make(map[string]string)
+	options["language"] = "en-US"
+
+	// Multi Search
+	search, err := tmdbClient.GetSearchMulti("Dexter", options)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Iterate
+	for _, v := range search.Results {
+		if v.MediaType == "movie" {
+			fmt.Println("Movie Title: ", v.Title)
+		} else if v.MediaType == "tv" {
+			fmt.Println("TV Show: ", v.Name)
+		} else if v.MediaType == "person" {
+			fmt.Println("Person: ", v.Name)
+		}
+	}
 }
